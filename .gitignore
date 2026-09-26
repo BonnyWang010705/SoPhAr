@@ -1,0 +1,11 @@
+# data/, results/ and figures/ come from the Hugging Face dataset (python download_data.py)
+/data/
+/results/
+/figures/
+/.cache/
+
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.venv/
+.DS_Store
