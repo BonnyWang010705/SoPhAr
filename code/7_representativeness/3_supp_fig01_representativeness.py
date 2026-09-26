@@ -17,8 +17,8 @@ import style as st
 # Drawn to the main-figure standard (code/4_figures/style.py, copied here as
 # style.py): matplotlib defaults, text 5-7 pt at the 180 mm printed width,
 # panel letters "a." in Times bold, no titles or notes inside the figure.
-# Run after 1 and 6: reads the tables written by 1_weekly_flight_hours.py and
-# 6_weekly_energy_estimate.py.
+# Run after 1 and 2: reads the tables written by 1_weekly_flight_hours.py and
+# 2_weekly_energy_estimate.py.
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, os.pardir, os.pardir))

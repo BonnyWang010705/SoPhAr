@@ -84,7 +84,7 @@ Figs. 3–23 give the same content for all 100 scenarios. Fig. 8a places the rou
 
 | Supplementary figure | Produced by | Output folder in `figures/supplementary` |
 |---|---|---|
-| Fig. 1 | `code/7_representativeness/8_supp_fig01_representativeness.py` | `fig01_representativeness` |
+| Fig. 1 | `code/7_representativeness/3_supp_fig01_representativeness.py` | `fig01_representativeness` |
 | Fig. 2 | `code/4_figures/supp_fig02_state_rankings.py` | `fig02_state_rankings` |
 | Fig. 3 | `code/6_supplementary/supp_fig03_selection_frequency.py` | `fig03_selection_frequency` |
 | Figs. 4–23 | `code/6_supplementary/supp_fig14_23_state_totals.py`, then `supp_fig04_23_penetration.py` | `fig04_23_penetration` |
@@ -130,8 +130,8 @@ total capacity (farms) or total flight distance (flights), and total cost saving
 ```bash
 cd code/7_representativeness
 python 1_weekly_flight_hours.py        # weekly flight volume and daytime share, 2025
-python 6_weekly_energy_estimate.py     # flight mix against the annual mix, and weekly energy
-python 8_supp_fig01_representativeness.py
+python 2_weekly_energy_estimate.py     # flight mix against the annual mix, and weekly energy
+python 3_supp_fig01_representativeness.py
 ```
 
 The flight basis is set in `airport_match.py`.
