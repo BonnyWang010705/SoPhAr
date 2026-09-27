@@ -1,11 +1,22 @@
-# Python 3.9 or newer (figures checked with Python 3.12 and the versions in brackets)
+# Python 3.9 or newer (figures checked with Python 3.12 and the versions in brackets;
+# the model scripts with Python 3.11 and the versions in braces)
 pandas>=2.0             # [2.3.3]
 numpy>=1.24             # [2.0.2]
 pyarrow>=14.0
 matplotlib>=3.7         # [3.9.4]
 geopandas>=0.14         # [1.0.1]
 pyogrio>=0.7
-shapely>=2.0
+shapely>=2.0            # {2.1.2}
+pyproj>=3.4             # {3.7.2}
 pillow>=10.0
 airportsdata>=20230000
 huggingface_hub>=0.23   # download_data.py only
+
+# model, optimization and sensitivity scripts (code/2_ to code/6_)
+numba>=0.57             # {0.67.0}  power model
+torch>=2.0              # {2.14.0}  schedule optimization (Adam solver)
+contextily>=1.4         # {1.7.1}   basemaps of the route maps and case studies
+seaborn>=0.12           # {0.13.2}  case study figures
+
+# optional: Gurobi solver of code/3_optimization (--solver gurobi); needs a Gurobi licence
+# gurobipy>=11.0
