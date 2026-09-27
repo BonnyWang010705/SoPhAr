@@ -9,14 +9,12 @@ scenarios select each farm, by state, as in Fig. 2e.
 Every panel spans the full printed width, and text is sized with style.pt so
 that it prints at 5-7 pt. fig8.py reuses the shared helpers defined here.
 
-Input, read inside the zip without extracting it:
-results/optimization_2/Optimization_2_Results_R1.zip (solar_results_* and
+Input: results/optimization_2/Optimization_2_Results_R1/ (solar_results_* and
 flight_results_*, one file per scenario).
 Assemble with assemble.py --figure figure7.
 """
 import argparse
 import os
-import zipfile
 
 import matplotlib
 matplotlib.use("Agg")
@@ -33,8 +31,7 @@ from fig2be import PANEL_E_ORDER
 ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     os.pardir, os.pardir))
 DATA = os.path.join(ROOT, "results", "optimization_2",
-                    "Optimization_2_Results_R1.zip")
-DATA_DIR = "Optimization_2_Results_R1"
+                    "Optimization_2_Results_R1")
 OUT = os.path.join(ROOT, "figures", "main", "fig07_solar_farm_selection", "panels")
 
 RATES = [0.2, 0.5, 0.8]
@@ -49,20 +46,17 @@ FS = {"head": st.pt(7.0, W), "label": st.pt(7.0, W), "tick": st.pt(6.0, W)}
 
 
 def open_results(path=DATA):
-    data = zipfile.ZipFile(path)
-    n = sum(1 for m in data.namelist()
-            if os.path.basename(m).startswith("solar_results_"))
+    n = sum(1 for m in os.listdir(path) if m.startswith("solar_results_"))
     if n != N_SCENARIOS:
         raise ValueError("expected %d solar_results files, found %d"
                          % (N_SCENARIOS, n))
-    return data
+    return path
 
 
 def read(data, kind, farm_p, flight_p, **kw):
-    """One scenario's file from the open results zip."""
-    name = "%s/%s_results_%sfarm_%sflight.csv" % (DATA_DIR, kind, farm_p, flight_p)
-    with data.open(name) as f:
-        return pd.read_csv(f, low_memory=False, **kw)
+    """One scenario's file from the results folder."""
+    name = "%s_results_%sfarm_%sflight.csv" % (kind, farm_p, flight_p)
+    return pd.read_csv(os.path.join(data, name), low_memory=False, **kw)
 
 
 def grid_headers(fig, axes, row_x=-0.04, title_x=0.045):

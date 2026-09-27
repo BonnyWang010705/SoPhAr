@@ -6,15 +6,13 @@ Fig. 3b-d; b, state-level total cost reduction of the selected flights by
 origin (left bar) and destination (right bar), stacked by range class as in
 Fig. 3e, top ten states and the rest as "Other".
 
-Input, read inside the zips without extracting them:
-results/optimization_2/Optimization_2_Results_R1.zip (fuel saving in
+Input: results/optimization_2/Optimization_2_Results_R1/ (fuel saving in
 Money_Cost_Saving) and the nine flight_map_* images in
-results/optimization_2/route_maps/Figure_8_All_Penetrations_R1.zip.
+results/optimization_2/route_maps/.
 Assemble with assemble.py --figure figure8.
 """
 import argparse
 import os
-import zipfile
 
 import matplotlib
 matplotlib.use("Agg")
@@ -29,9 +27,7 @@ import style as st
 from fig7 import (DATA, FS, N_TOP, RATES, ROOT, W, grid_headers,
                   open_results, read)
 
-ROUTE_MAPS = os.path.join(ROOT, "results", "optimization_2", "route_maps",
-                          "Figure_8_All_Penetrations_R1.zip")
-ROUTE_DIR = "Figure_8_All_Penetrations"
+ROUTE_MAPS = os.path.join(ROOT, "results", "optimization_2", "route_maps")
 OUT = os.path.join(ROOT, "figures", "main", "fig08_flight_selection", "panels")
 
 
@@ -100,15 +96,14 @@ def panel_b(data):
     return fig, tabs
 
 
-def panel_a(archive):
+def panel_a(folder):
     fig, axes = plt.subplots(3, 3, figsize=(W, 10.8))
     fig.subplots_adjust(left=0.07, right=0.99, top=0.89, bottom=0.01,
                         wspace=0.03, hspace=0.04)
     for i, fp in enumerate(RATES):
         for j, ip in enumerate(RATES):
-            name = "%s/flight_map_%sfarm_%sflight.png" % (ROUTE_DIR, fp, ip)
-            with archive.open(name) as f:
-                axes[i, j].imshow(Image.open(f).convert("RGB"))
+            name = "flight_map_%sfarm_%sflight.png" % (fp, ip)
+            axes[i, j].imshow(Image.open(os.path.join(folder, name)).convert("RGB"))
             axes[i, j].axis("off")
     grid_headers(fig, axes)
     return fig
@@ -121,7 +116,7 @@ def main():
     a = p.parse_args()
 
     st.apply()
-    for f in st.save(panel_a(zipfile.ZipFile(a.route_maps)),
+    for f in st.save(panel_a(a.route_maps),
                      os.path.join(OUT, "figure8a")):
         print("wrote", f)
     fig, tabs = panel_b(open_results(a.data))

@@ -17,10 +17,9 @@ the left with its corresponding quantitative panel on the right, and the ten
 rows are split into a six-row image (a-f and k-p) and a four-row image (g-j
 and q-t).
 
-Inputs: results/optimization_2/Optimization_2_Results_R1.zip (farm selections),
+Inputs: results/optimization_2/Optimization_2_Results_R1/ (farm selections),
 results/optimization_2/penetration_state_totals.csv (written by
-supp_fig14_23_state_totals.py) and
-results/optimization_2/route_maps/Figure_8_All_Penetrations_R1.zip
+supp_fig14_23_state_totals.py) and results/optimization_2/route_maps/
 (route maps drawn by the optimization visualization).
 """
 import argparse
@@ -28,7 +27,6 @@ import os
 import shutil
 import sys
 import tempfile
-import zipfile
 
 import matplotlib
 matplotlib.use("Agg")
@@ -49,12 +47,9 @@ import maps         # noqa: E402
 import style as st  # noqa: E402
 
 OPT2 = os.path.join(ROOT, "results", "optimization_2")
-ARCHIVE = os.path.join(OPT2, "Optimization_2_Results_R1.zip")
-INSIDE = "Optimization_2_Results_R1"
+RESULTS = os.path.join(OPT2, "Optimization_2_Results_R1")
 TOTALS = os.path.join(OPT2, "penetration_state_totals.csv")
-ROUTE_ZIP = os.path.join(ROOT, "results", "optimization_2", "route_maps",
-                          "Figure_8_All_Penetrations_R1.zip")
-ROUTE_INSIDE = "Figure_8_All_Penetrations"
+ROUTE_MAPS = os.path.join(OPT2, "route_maps")
 OUT = os.path.join(ROOT, "figures", "supplementary", "fig04_23_penetration")
 
 # saved so that the pictures print at about 300 ppi: the canvas is 16 in wide
@@ -160,10 +155,9 @@ def load_states():
             .set_crs("EPSG:4269", allow_override=True).to_crs(maps.ALBERS))
 
 
-def farms_of(archive, farm_p, flight_p):
-    name = "%s/solar_results_%sfarm_%sflight.csv" % (INSIDE, farm_p, flight_p)
-    with archive.open(name) as f:
-        return pd.read_csv(f, low_memory=False)
+def farms_of(results, farm_p, flight_p):
+    name = "solar_results_%sfarm_%sflight.csv" % (farm_p, flight_p)
+    return pd.read_csv(os.path.join(results, name), low_memory=False)
 
 
 def row_label(fig, ax, letter, description, fontsize):
@@ -200,10 +194,10 @@ def check_ceilings(*checks):
                                 format(ceiling, ",.0f")))
 
 
-def farm_page(archive, states, farm_p, order, indices):
+def farm_page(results, states, farm_p, order, indices):
     """One submitted-layout page of paired farm maps and scatter panels."""
     indices = list(indices)
-    tables = [farms_of(archive, farm_p, flight_p) for flight_p in RATES]
+    tables = [farms_of(results, farm_p, flight_p) for flight_p in RATES]
     check_ceilings((max(t.groupby("p_state").p_cap_safe.sum().max()
                         for t in tables), CAP_MAX, "state capacity (MW)"),
                    (max((t.Money_Cost_Saving + t.CO2_Emissions_Reduction
@@ -280,7 +274,7 @@ def farm_page(archive, states, farm_p, order, indices):
     return fig
 
 
-def flight_page(archive, totals, flight_p, indices):
+def flight_page(routes, totals, flight_p, indices):
     """One submitted-layout page of paired route maps and state bar panels."""
     indices = list(indices)
     sub = totals[totals.flight_p == flight_p]
@@ -309,10 +303,8 @@ def flight_page(archive, totals, flight_p, indices):
     for row, k in enumerate(indices):
         farm_p = RATES[k]
         ax = axes[row, 0]
-        name = "%s/flight_map_%sfarm_%sflight.png" % (ROUTE_INSIDE, farm_p,
-                                                      flight_p)
-        with archive.open(name) as f:
-            ax.imshow(Image.open(f).convert("RGB"))
+        name = "flight_map_%sfarm_%sflight.png" % (farm_p, flight_p)
+        ax.imshow(Image.open(os.path.join(routes, name)).convert("RGB"))
         ax.axis("off")
         row_label(fig, ax, MAP_LETTERS[k], "Solar farm %d%%" % (100 * farm_p),
                   FS_HALF["label"])
@@ -356,9 +348,9 @@ def flight_page(archive, totals, flight_p, indices):
     return fig
 
 
-def scatter_order(archive):
+def scatter_order(results):
     """States on the x axis, ordered by capacity as in Fig. 2e."""
-    sel = farms_of(archive, 1.0, 1.0)
+    sel = farms_of(results, 1.0, 1.0)
     return (sel.groupby("p_state").p_cap_safe.sum()
                .sort_values(ascending=False).index.tolist())
 
@@ -371,24 +363,23 @@ def main():
 
     st.apply()
     os.makedirs(OUT, exist_ok=True)
-    archive = zipfile.ZipFile(ARCHIVE)
 
     if a.only != "flights":
         states = load_states()
-        order = scatter_order(archive)
+        order = scatter_order(RESULTS)
         for farm_p in a.rates:
             farm_p = round(farm_p, 1)
             name = "farm_selection_%02d" % (100 * farm_p)
-            st.save(farm_page(archive, states, farm_p, order, PAGE_GROUPS[0]),
+            st.save(farm_page(RESULTS, states, farm_p, order, PAGE_GROUPS[0]),
                     os.path.join(OUT, name + "_maps"), dpi=SAVE_DPI)
-            st.save(farm_page(archive, states, farm_p, order, PAGE_GROUPS[1]),
+            st.save(farm_page(RESULTS, states, farm_p, order, PAGE_GROUPS[1]),
                     os.path.join(OUT, name + "_scatter"), dpi=SAVE_DPI)
             print("wrote %s (farm penetration %d%%)" % (name, 100 * farm_p),
                   flush=True)
 
     if a.only != "farms":
         totals = pd.read_csv(TOTALS)
-        routes = zipfile.ZipFile(ROUTE_ZIP)
+        routes = ROUTE_MAPS
         for flight_p in a.rates:
             flight_p = round(flight_p, 1)
             name = "flight_selection_%02d" % (100 * flight_p)
