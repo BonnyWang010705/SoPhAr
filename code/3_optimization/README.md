@@ -7,7 +7,7 @@ solved with the solver used for the paper or with Gurobi (optional).
 |---|---|---|---|
 | `1_schedule_optimization.py [--altitude H]` | flight schedule: shift each flight by up to ±1,800 s so that fewer flights compete for the same farm; all farms and flights take part | `adam` (default), `gurobi` | `results/optimization_1/optimized_flight_shifts[tag]_R1.csv`, `Optimization_1_solar_farm_analysis_results[tag]_merged_R1.csv`, `Optimization_1_flight_analysis_results[tag]_merged_R1.csv` |
 | `2_merge_shifts.py` | collects the shifts of the three altitudes (Fig. 5d–f) | – | `results/optimization_1/optimized_shift_flight_merged_R1.csv` |
-| `3_farm_flight_selection.py` | farm-and-flight choice: which farms and flights to equip at solar farm and flight penetration rates of 10–100% (100 scenarios), fixed schedules, 12,100 m | `greedy` (default), `gurobi` | `results/optimization_2/Optimization_2_Results_R1.zip`, `Optimization_2_summary_R1.csv` |
+| `3_farm_flight_selection.py` | farm-and-flight choice: which farms and flights to equip at solar farm and flight penetration rates of 10–100% (100 scenarios), fixed schedules, 12,100 m | `greedy` (default), `gurobi` | `results/optimization_2/Optimization_2_Results_R1/`, `Optimization_2_summary_R1.csv` |
 | `solvers.py` | the solvers, imported by the scripts | | |
 
 ```bash
@@ -47,7 +47,7 @@ most ρ_F|F| farms and ρ_I|I| flights.
   `python 3_farm_flight_selection.py --compare` solves the 10%/10% scenario both ways and
   prints the gap between the two objectives (below 2%).
 
-`--farm-rates` and `--flight-rates` run a subset of the scenarios; the archive and the summary
+`--farm-rates` and `--flight-rates` run a subset of the scenarios; the results folder and the summary
 keep the other scenarios of an earlier run. Both solvers write the same file names.
 
 With `--solver gurobi` the scripts need `gurobipy` and a Gurobi licence

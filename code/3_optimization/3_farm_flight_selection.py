@@ -14,19 +14,18 @@ at the reference altitude of 12,100 m and on fixed schedules.
 Reads results/baseline/flight_solar_overlap_pairs_R1.csv and writes to
 results/optimization_2/:
 
-    Optimization_2_Results_R1.zip   solar_results_<F>farm_<I>flight.csv and
+    Optimization_2_Results_R1/      solar_results_<F>farm_<I>flight.csv and
                                     flight_results_<F>farm_<I>flight.csv of
-                                    every scenario, in Optimization_2_Results_R1/
+                                    every scenario
     Optimization_2_summary_R1.csv   totals of every scenario
 
 Both solvers write the same files; a run over some of the scenarios replaces
-only those scenarios in the archive and the summary.
+only those scenarios in the folder and the summary.
 """
 import argparse
 import os
 import sys
 import time
-import zipfile
 
 import numpy as np
 import pandas as pd
@@ -39,8 +38,7 @@ import solvers    # noqa: E402
 
 ALTITUDE = 12100
 RATES = [round(0.1 * k, 1) for k in range(1, 11)]
-INSIDE = "Optimization_2_Results_R1"
-ARCHIVE = os.path.join(model.OPT2, INSIDE + ".zip")
+RESULTS = os.path.join(model.OPT2, "Optimization_2_Results_R1")
 SUMMARY = os.path.join(model.OPT2, "Optimization_2_summary_R1.csv")
 SUMMARY_COLS = ["Total_Energy_Supplied_MWh", "Total_Flight_Duration_Supported_Hours",
                 "Production_Beaming_Cost", "CO2_Emissions_Beaming",
@@ -108,44 +106,33 @@ def main():
         compare(df_results, a)
         return
 
-    os.makedirs(model.OPT2, exist_ok=True)
-    tmp = ARCHIVE + ".part"
-    written, summary_rows = set(), []
-    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as out:
-        for farm_p in [round(r, 1) for r in a.farm_rates]:
-            for flight_p in [round(r, 1) for r in a.flight_rates]:
-                t0 = time.time()
-                farms_sel, flights_sel, objective = solve(df_results, farm_p, flight_p, a)
-                if farms_sel is None:
-                    print("  %.1f farm / %.1f flight: no solution, skipped" % (farm_p, flight_p))
-                    continue
-                selected = df_results.loc[df_results["Solar_Farm_ID"].isin(farms_sel)
-                                          & df_results["Trip_ID"].isin(flights_sel)]
-                df_farms, df_flight_results = model.run_power_model(
-                    selected, farm_centers, farm_details, ALTITUDE / 1000, fuel_basis="energy")
-                farms = model.merge_farm_results(gdf_solar, df_farms)
-                flights = model.merge_flight_results(df_flights, df_flight_results,
-                                                     fuel_basis="energy")
-                for kind, table in (("solar", farms), ("flight", flights)):
-                    name = "%s/%s_results_%.1ffarm_%.1fflight.csv" % (INSIDE, kind, farm_p,
-                                                                      flight_p)
-                    out.writestr(name, table.to_csv(index=False))
-                    written.add(name)
-                row = {"p_solar_farm": farm_p, "p_flight": flight_p}
-                row.update(farms[SUMMARY_COLS].sum().to_dict())
-                summary_rows.append(row)
-                total = row["Money_Cost_Saving"] + 0.084 * row["CO2_Emissions_Reduction"]
-                print("  %.1f farm / %.1f flight: %d farms, %s flights, %s MWh, $%s  (%.0f s)"
-                      % (farm_p, flight_p, len(farms_sel), format(len(flights_sel), ","),
-                         format(row["Total_Energy_Supplied_MWh"], ",.0f"),
-                         format(total, ",.0f"), time.time() - t0), flush=True)
-        # keep the scenarios of an earlier archive that this run did not redo
-        if os.path.exists(ARCHIVE):
-            with zipfile.ZipFile(ARCHIVE) as old:
-                for name in old.namelist():
-                    if name not in written:
-                        out.writestr(name, old.read(name))
-    os.replace(tmp, ARCHIVE)
+    os.makedirs(RESULTS, exist_ok=True)
+    summary_rows = []
+    for farm_p in [round(r, 1) for r in a.farm_rates]:
+        for flight_p in [round(r, 1) for r in a.flight_rates]:
+            t0 = time.time()
+            farms_sel, flights_sel, objective = solve(df_results, farm_p, flight_p, a)
+            if farms_sel is None:
+                print("  %.1f farm / %.1f flight: no solution, skipped" % (farm_p, flight_p))
+                continue
+            selected = df_results.loc[df_results["Solar_Farm_ID"].isin(farms_sel)
+                                      & df_results["Trip_ID"].isin(flights_sel)]
+            df_farms, df_flight_results = model.run_power_model(
+                selected, farm_centers, farm_details, ALTITUDE / 1000, fuel_basis="energy")
+            farms = model.merge_farm_results(gdf_solar, df_farms)
+            flights = model.merge_flight_results(df_flights, df_flight_results,
+                                                 fuel_basis="energy")
+            for kind, table in (("solar", farms), ("flight", flights)):
+                table.to_csv(os.path.join(RESULTS, "%s_results_%.1ffarm_%.1fflight.csv"
+                                          % (kind, farm_p, flight_p)), index=False)
+            row = {"p_solar_farm": farm_p, "p_flight": flight_p}
+            row.update(farms[SUMMARY_COLS].sum().to_dict())
+            summary_rows.append(row)
+            total = row["Money_Cost_Saving"] + 0.084 * row["CO2_Emissions_Reduction"]
+            print("  %.1f farm / %.1f flight: %d farms, %s flights, %s MWh, $%s  (%.0f s)"
+                  % (farm_p, flight_p, len(farms_sel), format(len(flights_sel), ","),
+                     format(row["Total_Energy_Supplied_MWh"], ",.0f"),
+                     format(total, ",.0f"), time.time() - t0), flush=True)
 
     summary = pd.DataFrame(summary_rows)
     if os.path.exists(SUMMARY):
@@ -156,7 +143,7 @@ def main():
         summary = (pd.concat([old, summary], ignore_index=True)
                      .sort_values(["p_solar_farm", "p_flight"]).reset_index(drop=True))
     summary.to_csv(SUMMARY, index=False)
-    print("solver: %s; wrote %s and %s  (%.0f s)" % (a.solver, ARCHIVE, SUMMARY,
+    print("solver: %s; wrote %s and %s  (%.0f s)" % (a.solver, RESULTS, SUMMARY,
                                                      time.time() - started))
 
 

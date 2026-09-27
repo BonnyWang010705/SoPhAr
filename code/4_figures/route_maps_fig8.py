@@ -8,16 +8,14 @@ version) and Supplementary Figs. 14-23 place these maps.
     python route_maps_fig8.py                       # all 100 scenarios
     python route_maps_fig8.py --farm-rates 0.2 0.5 0.8 --flight-rates 0.2 0.5 0.8
 
-Reads results/optimization_2/Optimization_2_Results_R1.zip and writes
-results/optimization_2/route_maps/Figure_8_All_Penetrations_R1.zip
-(Figure_8_All_Penetrations/flight_map_<F>farm_<I>flight.png). The basemap
+Reads results/optimization_2/Optimization_2_Results_R1/ and writes
+results/optimization_2/route_maps/flight_map_<F>farm_<I>flight.png. The basemap
 (CARTO dark, OpenStreetMap data) is downloaded, so internet access is needed.
 """
 import argparse
 import io
 import os
 import sys
-import zipfile
 
 import matplotlib
 matplotlib.use("Agg")
@@ -33,10 +31,8 @@ import model                                              # noqa: E402
 from route_maps_fig3bd import BASEMAP, routes_and_airports  # noqa: E402
 
 RATES = [round(0.1 * k, 1) for k in range(1, 11)]
-RESULTS = os.path.join(model.OPT2, "Optimization_2_Results_R1.zip")
-RESULTS_DIR = "Optimization_2_Results_R1"
-OUT = os.path.join(model.OPT2, "route_maps", "Figure_8_All_Penetrations_R1.zip")
-OUT_DIR = "Figure_8_All_Penetrations"
+RESULTS = os.path.join(model.OPT2, "Optimization_2_Results_R1")
+OUT = os.path.join(model.OPT2, "route_maps")
 
 
 def flight_map(selected):
@@ -70,28 +66,18 @@ def main():
     ap.add_argument("--farm-rates", type=float, nargs="+", default=RATES)
     ap.add_argument("--flight-rates", type=float, nargs="+", default=RATES)
     a = ap.parse_args()
-    if not os.path.exists(RESULTS):
+    if not os.path.isdir(RESULTS):
         sys.exit("missing %s\nrun: python code/3_optimization/3_farm_flight_selection.py"
                  % RESULTS)
-    os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    tmp, written = OUT + ".part", set()
-    with zipfile.ZipFile(RESULTS) as results, zipfile.ZipFile(tmp, "w") as out:
-        for farm_p in [round(r, 1) for r in a.farm_rates]:
-            for flight_p in [round(r, 1) for r in a.flight_rates]:
-                with results.open("%s/flight_results_%.1ffarm_%.1fflight.csv"
-                                  % (RESULTS_DIR, farm_p, flight_p)) as f:
-                    selected = pd.read_csv(f, low_memory=False)
-                name = "%s/flight_map_%sfarm_%sflight.png" % (OUT_DIR, farm_p, flight_p)
-                out.writestr(name, flight_map(selected))
-                written.add(name)
-                print("  %s" % name, flush=True)
-        # keep maps of an earlier archive that this run did not redraw
-        if os.path.exists(OUT):
-            with zipfile.ZipFile(OUT) as old:
-                for name in old.namelist():
-                    if name not in written:
-                        out.writestr(name, old.read(name))
-    os.replace(tmp, OUT)
+    os.makedirs(OUT, exist_ok=True)
+    for farm_p in [round(r, 1) for r in a.farm_rates]:
+        for flight_p in [round(r, 1) for r in a.flight_rates]:
+            selected = pd.read_csv(os.path.join(RESULTS, "flight_results_%.1ffarm_%.1fflight.csv"
+                                                % (farm_p, flight_p)), low_memory=False)
+            name = "flight_map_%sfarm_%sflight.png" % (farm_p, flight_p)
+            with open(os.path.join(OUT, name), "wb") as f:
+                f.write(flight_map(selected))
+            print("  %s" % name, flush=True)
     print("wrote %s" % OUT)
 
 
