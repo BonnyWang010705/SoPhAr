@@ -20,7 +20,7 @@ for h in 12100 9100 15100; do
 done
 ```
 
-The dataset holds the outputs of all three steps, so any step can be started from there.
+Of these outputs, the dataset holds only the `_merged` tables of step 3; the scripts create the others.
 
 ## Model
 

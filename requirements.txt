@@ -1,6 +1,6 @@
 # Python 3.9 or newer (figures checked with Python 3.12 and the versions in brackets;
 # the model scripts with Python 3.11 and the versions in braces)
-pandas>=2.0             # [2.3.3]
+pandas==2.3.3
 numpy>=1.24             # [2.0.2]
 pyarrow>=14.0
 matplotlib>=3.7         # [3.9.4]

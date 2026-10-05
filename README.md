@@ -32,9 +32,10 @@ SoPhAr/
 └── figures/     from the dataset
 ```
 
-Use `python download_data.py --include "results/*" "figures/*"` to skip the raw flight archives (about 0.5 GB).
-The flight-farm overlap tables in `results/baseline` are large (0.8–1.3 GB each); they are needed only to
-rerun the model scripts, not to redraw the figures.
+`python download_data.py --include "results/*" "figures/*"` downloads only `results/` and `figures/`,
+which is enough for most figure scripts; the scripts that read `data/` need the full download.
+The flight-farm overlap tables (0.8–1.3 GB each) are not in the dataset; `2_overlap_pairs.py` creates
+them in `results/baseline`.
 
 ## What each folder does
 
@@ -61,8 +62,10 @@ Each of the folders `2_coverage_and_savings`, `3_optimization`, `5_sensitivity_a
 
 ## Reproducing the model results
 
-The dataset holds every result table, so the figures can be redrawn without this step. To
-recompute the results from the inputs, run the model scripts in this order (times on a laptop):
+The dataset holds the result tables that the main figures and Supplementary Figs. 1–23 read, so
+these can be redrawn without this step. The flight-farm overlaps, the shifts of each altitude and the
+sensitivity sweep are not in the dataset; the scripts below create them. To recompute the results
+from the inputs, run the model scripts in this order (times on a laptop):
 
 ```bash
 cd code/2_coverage_and_savings
@@ -212,12 +215,12 @@ flights and numbers them (`Trip_ID`), as the model scripts need.
 
 ## Data
 
-Inputs the model scripts read from the dataset:
+Inputs the model scripts read:
 
 | Path | Contents |
 |---|---|
 | `data/flights/processed/flights_2025.parquet` | 2025 flight table (`code/1_flight_data`) |
-| `data/flights/processed/flight_with_od_coor.csv` | analysed flights with airport coordinates (`1_flight_od.py`) |
+| `data/flights/processed/flight_with_od_coor.csv` | analysed flights with airport coordinates, created by `1_flight_od.py` |
 | `data/airports/airport_data.geojson` | USA Airports (Esri, ArcGIS) |
 | `data/solar_farms/uspvdb_v3_0_20250430.geojson` | U.S. Large-Scale Solar Photovoltaic Database v3.0 (LBNL/USGS) |
 | `data/case_study/flight_22663_*.csv` | record and farm crossings of the flight of Supplementary Figs. 30–31 |
